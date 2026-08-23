@@ -1,0 +1,12 @@
+{
+  "name": "joineasy-root",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev": "echo 'Run backend and frontend separately or use docker-compose up --build'",
+    "build": "cd frontend && npm run build",
+    "seed": "cd backend && npm run seed"
+  }
+}
