@@ -109,15 +109,29 @@ async function listAssignments(req, res, next) {
       );
       rows = result.rows;
     } else {
-      // Student: only assignments targeted at their groups or 'all'
+      // Student: only assignments targeted at their groups or 'all', exactly once per assignment
       const result = await db.query(
-        `SELECT DISTINCT a.*,
-                s.status AS submission_status, s.confirmed_at
+        `SELECT a.*,
+                u.name AS creator_name,
+                CASE WHEN EXISTS (
+                  SELECT 1 FROM submissions s
+                  JOIN group_members gm ON gm.group_id = s.group_id
+                  WHERE s.assignment_id = a.id AND gm.student_id = $1 AND s.status = 'confirmed'
+                ) THEN 'confirmed' ELSE NULL END AS submission_status,
+                (
+                  SELECT s.confirmed_at FROM submissions s
+                  JOIN group_members gm ON gm.group_id = s.group_id
+                  WHERE s.assignment_id = a.id AND gm.student_id = $1 AND s.status = 'confirmed'
+                  LIMIT 1
+                ) AS confirmed_at
          FROM assignments a
-         JOIN group_members gm ON gm.student_id = $1
-         LEFT JOIN assignment_groups ag ON ag.assignment_id = a.id AND ag.group_id = gm.group_id
-         LEFT JOIN submissions s ON s.assignment_id = a.id AND s.group_id = gm.group_id
-         WHERE a.target_type = 'all' OR ag.assignment_id IS NOT NULL
+         JOIN users u ON u.id = a.created_by
+         WHERE a.target_type = 'all'
+            OR EXISTS (
+              SELECT 1 FROM assignment_groups ag
+              JOIN group_members gm ON gm.group_id = ag.group_id
+              WHERE ag.assignment_id = a.id AND gm.student_id = $1
+            )
          ORDER BY a.due_date ASC NULLS LAST, a.created_at DESC`,
         [req.user.userId]
       );
