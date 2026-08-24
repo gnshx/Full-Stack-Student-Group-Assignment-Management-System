@@ -27,10 +27,10 @@ export default function Navbar() {
       {/* Logo */}
       <div className="px-6 py-5 border-b border-surface-border">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center text-white font-bold text-lg">J</div>
-          <span className="font-bold text-white text-lg">JoinEasy</span>
+          <div className="w-10 h-10 rounded-lg bg-primary-600 flex items-center justify-center text-white font-black text-sm tracking-wider shadow-md">JEC</div>
+          <span className="font-extrabold text-white text-base tracking-tight leading-tight">JOIN EASY<br/><span className="text-xs font-semibold text-primary-400">CLASSROOM</span></span>
         </div>
-        <div className="mt-1 text-xs text-surface-muted capitalize">{user?.role} Portal</div>
+        <div className="mt-2 text-xs text-surface-muted capitalize">{user?.role} Portal</div>
       </div>
 
       {/* Nav links */}
