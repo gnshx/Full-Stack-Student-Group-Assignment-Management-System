@@ -39,6 +39,21 @@ app.use('/api/analytics', analyticsRoutes);
 // Health check
 app.get('/health', (_, res) => res.json({ status: 'ok' }));
 
+const path = require('path');
+const fs = require('fs');
+
+// Serve frontend static files if present (Production / Unified Deployment)
+const frontendDist = path.join(__dirname, '../../frontend/dist');
+if (fs.existsSync(frontendDist)) {
+  app.use(express.static(frontendDist));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path === '/health') return next();
+    res.sendFile(path.join(frontendDist, 'index.html'));
+  });
+} else {
+  app.get('/', (_, res) => res.json({ message: 'JoinEasy API Server Active', health: '/health' }));
+}
+
 // Global error handler
 app.use((err, req, res, next) => {
   console.error(err);
