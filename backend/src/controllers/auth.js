@@ -15,6 +15,8 @@ const loginValidation = [
   body('password').notEmpty(),
 ];
 
+const JWT_SECRET = process.env.JWT_SECRET || 'joineasy_secret_jwt_key_2026_super_secure';
+
 async function register(req, res, next) {
   try {
     const errors = validationResult(req);
@@ -32,8 +34,8 @@ async function register(req, res, next) {
     );
 
     const user = result.rows[0];
-    const token = jwt.sign({ userId: user.id, role: user.role }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN || '1h',
+    const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN || '7d',
     });
 
     res.status(201).json({ token, user });
@@ -53,8 +55,8 @@ async function login(req, res, next) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ userId: user.id, role: user.role }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN || '1h',
+    const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN || '7d',
     });
 
     const { password_hash, ...safeUser } = user;
