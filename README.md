@@ -4,6 +4,14 @@ A full-stack, role-based web application where **Students** self-organize into g
 
 ---
 
+## 🌐 Live Production Deployment
+
+- **Live Web Application:** [https://full-stack-student-group-assignment.onrender.com/](https://full-stack-student-group-assignment.onrender.com/)
+- **Demo Admin / Professor Login:** `turing@university.edu` / `password123`
+- **Demo Student Login:** `alice@student.edu` / `password123`
+
+---
+
 ## 🚀 Stack & Technologies
 
 - **Frontend:** React.js (Vite) + Tailwind CSS (Custom Dark Surface Design System)
