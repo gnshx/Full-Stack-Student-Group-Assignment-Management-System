@@ -123,7 +123,20 @@ async function listAssignments(req, res, next) {
                   JOIN group_members gm ON gm.group_id = s.group_id
                   WHERE s.assignment_id = a.id AND gm.student_id = $1 AND s.status = 'confirmed'
                   LIMIT 1
-                ) AS confirmed_at
+                ) AS confirmed_at,
+                EXISTS (
+                  SELECT 1 FROM group_members gm
+                  JOIN groups g ON g.id = gm.group_id
+                  WHERE gm.student_id = $1
+                    AND g.created_by = $1
+                    AND (
+                      a.target_type = 'all'
+                      OR EXISTS (
+                        SELECT 1 FROM assignment_groups ag
+                        WHERE ag.assignment_id = a.id AND ag.group_id = gm.group_id
+                      )
+                    )
+                ) AS is_group_leader
          FROM assignments a
          JOIN users u ON u.id = a.created_by
          WHERE a.target_type = 'all'

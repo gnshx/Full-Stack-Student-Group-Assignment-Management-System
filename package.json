@@ -6,8 +6,11 @@
     "start": "cd backend && npm start",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
-    "dev": "echo 'Run backend and frontend separately or use docker compose up --build'",
+    "dev": "concurrently -n \"backend,frontend\" -c \"purple,cyan\" \"npm run dev:backend\" \"npm run dev:frontend\"",
     "build": "cd backend && npm install && cd ../frontend && npm install && npm run build",
     "seed": "cd backend && npm run seed"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
   }
 }

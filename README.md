@@ -74,14 +74,82 @@ A full-stack, role-based web application where **Students** self-organize into g
 
 ## 🗄️ Database Schema & Data Model (ER)
 
-```sql
-users (id, name, email [UNIQUE], password_hash, role ['student','admin'], created_at)
-groups (id, name, created_by -> users.id, created_at)
-group_members (id, group_id -> groups.id, student_id -> users.id, joined_at) -- UNIQUE(group_id, student_id)
-assignments (id, title, description, due_date, onedrive_link, created_by -> users.id, target_type ['all','specific_groups'], created_at)
-assignment_groups (id, assignment_id -> assignments.id, group_id -> groups.id) -- UNIQUE(assignment_id, group_id)
-submissions (id, assignment_id -> assignments.id, group_id -> groups.id, confirmed_by -> users.id, status ['pending','confirmed'], confirmed_at) -- UNIQUE(assignment_id, group_id)
+### Relational Entity-Relationship Diagram (ERD)
+
+![JoinEasy Entity-Relationship Diagram](docs/images/er_diagram.png)
+
+```mermaid
+erDiagram
+    users ||--o{ groups : "creates (leader)"
+    users ||--o{ group_members : "joins"
+    users ||--o{ assignments : "creates (admin)"
+    users ||--o{ submissions : "confirms"
+    
+    groups ||--o{ group_members : "has members"
+    groups ||--o{ assignment_groups : "targeted by"
+    groups ||--o{ submissions : "submits"
+
+    assignments ||--o{ assignment_groups : "targets"
+    assignments ||--o{ submissions : "has"
+
+    users {
+        int id PK
+        string name
+        string email UNIQUE
+        string password_hash
+        enum role "student | admin"
+        timestamp created_at
+    }
+
+    groups {
+        int id PK
+        string name
+        int created_by FK "users.id (Leader)"
+        timestamp created_at
+    }
+
+    group_members {
+        int id PK
+        int group_id FK
+        int student_id FK
+        timestamp joined_at
+    }
+
+    assignments {
+        int id PK
+        string title
+        string description
+        timestamp due_date
+        string onedrive_link
+        int created_by FK
+        enum target_type "all | specific_groups"
+        timestamp created_at
+    }
+
+    assignment_groups {
+        int id PK
+        int assignment_id FK
+        int group_id FK
+    }
+
+    submissions {
+        int id PK
+        int assignment_id FK
+        int group_id FK
+        int confirmed_by FK "users.id (Leader)"
+        enum status "pending | confirmed"
+        timestamp confirmed_at
+    }
 ```
+
+---
+
+## 📸 Screenshots & UI Showcase
+
+![JoinEasy Platform Preview](docs/images/dashboard_preview.png)
+
+- **Student Workspace & Group Leader Safeguard:** Responsive dashboard where group leaders trigger the 2-step confirmation sequence while team members view real-time status.
+- **Professor Analytics Dashboard:** Completion overview chart rendering group submission rates per assignment alongside filterable status controls.
 
 ---
 
@@ -144,10 +212,60 @@ Access Vite dev server at [http://localhost:5173](http://localhost:5173).
 | POST | `/api/assignments` | Admin | Create assignment (all / specific groups) |
 | PUT | `/api/assignments/:id` | Admin | Edit assignment |
 | DELETE | `/api/assignments/:id` | Admin | Delete assignment |
-| POST | `/api/submissions/:assignmentId/confirm` | Student | 2-step confirm assignment for student's group |
+| POST | `/api/submissions/:assignmentId/confirm` | Student | 2-step confirm assignment (Leader-only check) |
 | GET | `/api/submissions/group/:groupId` | Auth | Get submission status for a group |
 | GET | `/api/analytics/overview` | Admin | Overall admin metrics & recent assignments |
 | GET | `/api/analytics/assignment/:id` | Admin | Per-assignment group confirmation stats |
+
+---
+
+## 🎨 Round 2 Enhancements & Architectural Rationale
+
+### 1. Leader-Only 2-Step Confirmation Safeguard (Section 5.1)
+- **Problem:** Previously, any group member could trigger confirmation for a group's assignment.
+- **Solution:** Enforced strict group leader authorization on backend `POST /api/submissions/:assignmentId/confirm` by checking `groups.created_by === req.user.userId`.
+- **UI UX:** Student assignment cards dynamically inspect leader status. Group leaders see the active **"✓ I have submitted"** button leading to the 2-step confirm modal sequence. Non-leader members see **"🔒 Waiting for group leader"** status pills. In the Group Members list, the leader is highlighted with a **"👑 Leader"** badge.
+
+#### Sequence Diagram: Group Leader Confirmation Safeguard
+```
+Student (Leader)         Frontend App               Backend API              Database (PostgreSQL)
+      │                        │                         │                            │
+      │── Click "I've          │                         │                            │
+      │   submitted" ─────────>│                         │                            │
+      │                        │── Open Step 1 Modal ──>│                            │
+      │── Confirm Intent ─────>│                         │                            │
+      │                        │── Open Step 2 Modal ──>│                            │
+      │── Final Confirmation ─>│                         │                            │
+      │                        │── POST /confirm ───────>│                            │
+      │                        │                         │── Query group & creator ──>│
+      │                        │                         │<── Returns leaderId ───────│
+      │                        │                         │── If leaderId != user: 403 │
+      │                        │                         │── Else: UPSERT submission ─>│
+      │                        │<── 201 Created ─────────│                            │
+      │<── UI State Updates ───│                         │                            │
+```
+
+### 2. Status Filtering on Admin Portals (Section 5.4)
+- Added live status filter pills on **Admin Assignments** and **Admin Analytics** pages.
+- Professors can filter assignments by:
+  - **All Assignments**
+  - **Fully Confirmed (100% submission rate)**
+  - **Pending Progress (Incomplete group submissions)**
+- Updates both list views and the custom analytics bar chart seamlessly.
+
+### 3. Domain Design Rationale (Section 5.2 & 5.3)
+
+#### A. Groups-Instead-of-Courses Rationale
+- **Design Decision:** The system adopts **Groups** as the primary organizing unit rather than introducing a separate `courses` catalog table.
+- **Rationale:** JoinEasy focuses on collaborative, team-based submission tracking for shared OneDrive folders. Using groups as the atomic entity minimizes schema complexity while providing targeted assignment distribution (`target_type: all | specific_groups`).
+
+#### B. Group-Level (Not Individual) Submissions Rationale
+- **Design Decision:** All assignments are strictly group-scoped.
+- **Rationale:** External submission happens on shared group OneDrive folders. Group-scoped assignment targeting aligns perfectly with team project deliverables.
+
+#### C. Group-Level (Not Per-Student) Confirmation Tracking Rationale
+- **Design Decision:** Confirmation status is stored as a single `submissions` row per `(assignment_id, group_id)`.
+- **Rationale:** Group submission is an atomic action on behalf of the whole team. By recording `confirmed_by -> users.id` (the group leader) on the submission record, the system avoids redundant individual student status checks while ensuring single-point leader accountability.
 
 ---
 
@@ -155,4 +273,6 @@ Access Vite dev server at [http://localhost:5173](http://localhost:5173).
 
 1. **Stateless JWT Authentication & RBAC:** User claims (`userId`, `role`) are encoded in signed JWTs. Role guards enforce permissions on both frontend route transitions and backend API controllers.
 2. **Data Integrity Constraints:** Database-level unique constraints (`UNIQUE(assignment_id, group_id)`, `UNIQUE(group_id, student_id)`) ensure transactional consistency and eliminate race conditions.
-3. **UX Safeguard (2-Step Confirmation):** Prevents accidental marking of submissions by requiring initial intent check followed by explicit group-level confirmation.
+3. **UX Safeguard (2-Step Confirmation):** Prevents accidental marking of submissions by requiring initial intent check followed by explicit group-level confirmation by designated group leaders.
+
+

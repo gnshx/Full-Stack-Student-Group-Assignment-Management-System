@@ -6,9 +6,11 @@ async function confirmSubmission(req, res, next) {
     const assignmentId = parseInt(req.params.assignmentId);
     const studentId = req.user.userId;
 
-    // Find the student's group that this assignment targets
+    // Find the student's group that this assignment targets and check group leader (created_by)
     const groupRes = await db.query(
-      `SELECT gm.group_id FROM group_members gm
+      `SELECT g.id AS group_id, g.created_by
+       FROM group_members gm
+       JOIN groups g ON g.id = gm.group_id
        JOIN assignments a ON a.id = $1
        WHERE gm.student_id = $2
          AND (
@@ -26,7 +28,12 @@ async function confirmSubmission(req, res, next) {
       return res.status(403).json({ error: 'No eligible group found for this assignment' });
     }
 
-    const groupId = groupRes.rows[0].group_id;
+    const { group_id: groupId, created_by: leaderId } = groupRes.rows[0];
+
+    // Enforce leader-only submission confirmation safeguard
+    if (leaderId !== studentId) {
+      return res.status(403).json({ error: 'Only the group leader can confirm submissions' });
+    }
 
     const result = await db.query(
       `INSERT INTO submissions (assignment_id, group_id, confirmed_by, status, confirmed_at)
