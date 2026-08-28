@@ -103,10 +103,10 @@ Professors access an executive dashboard featuring real-time submission metrics,
 
 ```mermaid
 erDiagram
-    users ||--o{ groups : "creates / leads"
+    users ||--o{ groups : "creates or leads"
     users ||--o{ group_members : "joins"
-    users ||--o{ assignments : "publishes (admin)"
-    users ||--o{ submissions : "confirms (leader)"
+    users ||--o{ assignments : "publishes"
+    users ||--o{ submissions : "confirms"
     
     groups ||--o{ group_members : "contains"
     groups ||--o{ assignment_groups : "targeted by"
@@ -118,16 +118,16 @@ erDiagram
     users {
         int id PK
         string name
-        string email UNIQUE
+        string email
         string password_hash
-        enum role "student | admin"
+        string role
         timestamp created_at
     }
 
     groups {
         int id PK
         string name
-        int created_by FK "users.id (Leader)"
+        int created_by FK
         timestamp created_at
     }
 
@@ -145,7 +145,7 @@ erDiagram
         timestamp due_date
         string onedrive_link
         int created_by FK
-        enum target_type "all | specific_groups"
+        string target_type
         timestamp created_at
     }
 
@@ -159,8 +159,8 @@ erDiagram
         int id PK
         int assignment_id FK
         int group_id FK
-        int confirmed_by FK "users.id (Leader)"
-        enum status "pending | confirmed"
+        int confirmed_by FK
+        string status
         timestamp confirmed_at
     }
 ```
