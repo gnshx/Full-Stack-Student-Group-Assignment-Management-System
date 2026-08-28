@@ -1,78 +1,101 @@
-# Student, Group & Assignment Management System — JoinEasy
+<div align="center">
 
-A full-stack, role-based web application where **Students** self-organize into groups, view assignments posted by **Professors (Admins)**, and confirm submissions made externally on OneDrive via a 2-step confirmation UX safeguard. Professors track student & group submission progress through an analytics dashboard.
+# 🎓 JoinEasy — Enterprise Academic Assignment Management System
 
----
+**An Enterprise-Grade, Full-Stack Academic Portal for Collaborative Student Group Management, Assignment Distribution, and Submission Verification.**
 
-## 🌐 Live Production Deployment
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg?style=for-the-badge&logo=github-actions)](https://github.com/gnshx/Full-Stack-Student-Group-Assignment-Management-System)
+[![Node.js](https://img.shields.io/badge/Node.js-v20.x-339933?style=for-the-badge&logo=nodedotjs)](https://nodejs.org/)
+[![React](https://img.shields.io/badge/React-v18.x-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-v16.x-4169E1?style=for-the-badge&logo=postgresql)](https://www.postgresql.org/)
+[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v3.x-06B6D4?style=for-the-badge&logo=tailwindcss)](https://tailwindcss.com/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker)](https://www.docker.com/)
 
-- **Live Web Application:** [https://full-stack-student-group-assignment.onrender.com/](https://full-stack-student-group-assignment.onrender.com/)
-- **Demo Admin / Professor Login:** `turing@university.edu` / `password123`
-- **Demo Student Login:** `alice@student.edu` / `password123`
+[Live Application Demo](https://full-stack-student-group-assignment.onrender.com/) • [System Architecture](#-system-architecture--topology) • [API Documentation](#-api-specification) • [Deployment Guide](#-getting-started--orchestration)
 
----
-
-## 🚀 Stack & Technologies
-
-- **Frontend:** React.js (Vite) + Tailwind CSS (Custom Dark Surface Design System)
-- **Backend:** Node.js + Express REST API
-- **Database:** PostgreSQL 16 (Relational DB with ENUM types & foreign key constraints)
-- **Authentication:** JWT (JSON Web Tokens) with role-based middleware access control (RBAC) + Bcrypt password hashing
-- **Containerization:** Docker & Docker Compose (Multi-container architecture: Frontend, Backend, PostgreSQL)
+</div>
 
 ---
 
-## 📌 Features
+## 🌐 Live Production Access & Credentials
 
-### 📚 Student Portal
-- **Authentication & RBAC:** Student registration and login.
-- **Group Management:** Create study groups, become implicit creator, invite members via email, and manage membership.
-- **Assignment View:** View targeted assignments (All Groups vs. Specific Groups) with due dates and external OneDrive submission links.
-- **2-Step Submission Safeguard:** 
-  1. Click *"I have submitted"* to review OneDrive link.
-  2. Confirm in modal *"Are you sure? This will mark your group's submission as complete"*.
-- **Group Submission Tracking:** Real-time completion progress bar relative to assigned work.
-
-### 🎓 Admin / Professor Portal
-- **Dashboard:** System-wide metrics (Total Students, Groups, Assignments, Confirmation counts).
-- **Assignment CRUD & Flexible Targeting:**
-  - Create/Edit/Delete assignments with titles, descriptions, due dates, and OneDrive links.
-  - Choose target type: **All Groups** or **Specific Groups** (multi-select).
-- **Group Oversight:** View all student-created groups and inspect member lists.
-- **Analytics & Tracking:** Per-assignment progress bars and drill-down views showing submission status and timestamps per group.
+| Access Role | Production Web App | Demo Email Credentials | Password |
+| :--- | :--- | :--- | :--- |
+| **Faculty / Admin** | [Live Platform Portal](https://full-stack-student-group-assignment.onrender.com/) | `turing@university.edu` | `password123` |
+| **Student** | [Live Platform Portal](https://full-stack-student-group-assignment.onrender.com/) | `alice@student.edu` | `password123` |
 
 ---
 
-## 🏛️ High-Level Architecture
+## 📌 Executive Summary
+
+**JoinEasy** bridges the operational gap between collaborative academic teamwork and professor assignment tracking. Built with modern web architecture standards, JoinEasy enables students to form autonomous study groups, track project milestones, and verify external cloud submissions (e.g., OneDrive / SharePoint) via an authoritative **2-Step Group Leader Safeguard**. 
+
+Professors access an executive dashboard featuring real-time submission metrics, targeted assignment distribution engines (*All Groups* vs. *Specific Targeted Groups*), and status-based analytical heatmaps.
+
+---
+
+## ✨ Engineering Highlights & Core Features
+
+### 🛡️ 1. Cryptographic Authentication & Role-Based Access Control (RBAC)
+- **Stateful Password Hashing**: Utilizes `bcryptjs` with salt-rounds to enforce cryptographically secure credential storage.
+- **Signed JWT Tokens**: Issues signed JSON Web Tokens (`jsonwebtoken`) containing encrypted claims (`userId`, `role`).
+- **Route Guards & Middleware**: Enforces strict privilege validation on both client-side React Router transitions and backend Express middleware stacks.
+
+### 👑 2. Group Leader 2-Step Confirmation Safeguard
+- **Single-Point Accountability**: Restricts final assignment completion confirmation exclusively to designated **Group Leaders** (`groups.created_by === req.user.userId`).
+- **Transactional State Guarantee**: Eliminates premature or conflicting student confirmations by validating leader identity at the database layer.
+- **2-Step Intent Verification**:
+  1. **Intent Check**: Student leader reviews external OneDrive submission repository URL.
+  2. **Final Acknowledgment**: Modal confirmation updates group status across all team members instantaneously.
+
+### 🎯 3. Dynamic Assignment Scope Engine
+- **Global Distribution**: Publish assignments broadly to all enrolled course groups (`target_type: 'all'`).
+- **Targeted Scope**: Distribute assignments selectively to designated groups (`target_type: 'specific_groups'`) via relational link tables (`assignment_groups`).
+
+### 📊 4. Real-Time Analytical Visualizer & Metric Engine
+- **Completion Rate Heatmaps**: Custom SVG chart visualizer rendering real-time completion rates per assignment.
+- **Administrative Status Filters**: Seamlessly filter assignments by *All*, *100% Fully Confirmed*, and *Pending Progress*.
+- **Granular Group Drilldowns**: Inspect individual group roster statuses, confirming leader identities, and timestamps.
+
+---
+
+## 🏛️ System Architecture & Topology
+
+### High-Level System Flow
 
 ```
-┌─────────────────────────────────────────┐
-│           React + Tailwind              │   (SPA, Role-aware routing & route guards)
-│      Student Portal  |  Admin UI        │
-└────────────────────┬────────────────────┘
-                     │ REST API (JSON) / JWT Bearer Header
-                     ▼
-┌─────────────────────────────────────────┐
-│         Node.js + Express API           │
-│  ┌───────────────────────────────────┐  │
-│  │ JWT & RBAC Middleware             │  │
-│  ├───────────────────────────────────┤  │
-│  │ Controllers & Routes              │  │
-│  │  - Auth      - Users              │  │
-│  │  - Groups    - Assignments        │  │
-│  │  - Submissions - Analytics        │  │
-│  └───────────────────────────────────┘  │
-└────────────────────┬────────────────────┘
-                     │ SQL Queries (pg Pool)
-                     ▼
-┌─────────────────────────────────────────┐
-│              PostgreSQL DB              │
-└─────────────────────────────────────────┘
+                                  ┌────────────────────────────────────────────────────────┐
+                                  │                Client Layer (Vite + React)             │
+                                  │   - Plus Jakarta Sans Typography & Surface Palette    │
+                                  │   - Role-Aware Route Guards & JWT Context State        │
+                                  └───────────────────────────┬────────────────────────────┘
+                                                              │
+                                                              │ HTTPS / JSON REST API
+                                                              │ (Authorization: Bearer <JWT>)
+                                                              ▼
+                                  ┌────────────────────────────────────────────────────────┐
+                                  │              API Application Layer (Node.js)           │
+                                  │  ┌──────────────────────────────────────────────────┐  │
+                                  │  │ Express Router & Security Rate Limiters         │  │
+                                  │  ├──────────────────────────────────────────────────┤  │
+                                  │  │ JWT & RBAC Authorization Middleware Stack        │  │
+                                  │  ├──────────────────────────────────────────────────┤  │
+                                  │  │ Controllers: Auth | Users | Groups | Submissions │  │
+                                  │  └──────────────────────────────────────────────────┘  │
+                                  └───────────────────────────┬────────────────────────────┘
+                                                              │
+                                                              │ Connection Pool SQL (pg)
+                                                              ▼
+                                  ┌────────────────────────────────────────────────────────┐
+                                  │           Persistence Layer (PostgreSQL 16)            │
+                                  │  - Transactional Integrity & Relational Foreign Keys   │
+                                  │  - ENUM Role & Target Constraints                     │
+                                  └────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🗄️ Database Schema & Data Model (ER)
+## 🗄️ Database Architecture & Relational ERD
 
 ### Relational Entity-Relationship Diagram (ERD)
 
@@ -80,17 +103,17 @@ A full-stack, role-based web application where **Students** self-organize into g
 
 ```mermaid
 erDiagram
-    users ||--o{ groups : "creates (leader)"
+    users ||--o{ groups : "creates / leads"
     users ||--o{ group_members : "joins"
-    users ||--o{ assignments : "creates (admin)"
-    users ||--o{ submissions : "confirms"
+    users ||--o{ assignments : "publishes (admin)"
+    users ||--o{ submissions : "confirms (leader)"
     
-    groups ||--o{ group_members : "has members"
+    groups ||--o{ group_members : "contains"
     groups ||--o{ assignment_groups : "targeted by"
     groups ||--o{ submissions : "submits"
 
-    assignments ||--o{ assignment_groups : "targets"
-    assignments ||--o{ submissions : "has"
+    assignments ||--o{ assignment_groups : "links"
+    assignments ||--o{ submissions : "tracks"
 
     users {
         int id PK
@@ -142,137 +165,206 @@ erDiagram
     }
 ```
 
+### Relational Schema Field Reference
+
+| Table Name | Field | Type | Constraints / References | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| **`users`** | `id` | `SERIAL` | `PRIMARY KEY` | Unique user identity identifier |
+| | `email` | `VARCHAR(255)` | `UNIQUE, NOT NULL` | University email credential |
+| | `role` | `ENUM` | `'student' \| 'admin'` | System authorization role |
+| **`groups`** | `id` | `SERIAL` | `PRIMARY KEY` | Study group identifier |
+| | `created_by` | `INTEGER` | `FOREIGN KEY (users.id)` | Designated Group Leader |
+| **`group_members`**| `group_id` | `INTEGER` | `FOREIGN KEY (groups.id)` | Group relation reference |
+| | `student_id` | `INTEGER` | `FOREIGN KEY (users.id)` | Enrolled student reference |
+| **`assignments`** | `target_type` | `ENUM` | `'all' \| 'specific_groups'`| Assignment scope indicator |
+| | `onedrive_link`| `TEXT` | `NULLABLE` | External cloud submission repository URL |
+| **`submissions`** | `confirmed_by`| `INTEGER` | `FOREIGN KEY (users.id)` | Leader ID who authorized completion |
+| | `status` | `ENUM` | `'pending' \| 'confirmed'` | Atomic group submission status |
+
 ---
 
-## 📸 Screenshots & UI Showcase
+## 🎨 Enterprise UI/UX Design System
 
 ![JoinEasy Platform Preview](docs/images/dashboard_preview.png)
 
-- **Student Workspace & Group Leader Safeguard:** Responsive dashboard where group leaders trigger the 2-step confirmation sequence while team members view real-time status.
-- **Professor Analytics Dashboard:** Completion overview chart rendering group submission rates per assignment alongside filterable status controls.
+JoinEasy implements an enterprise dark surface theme built in accordance with modern visual guidelines:
+- **Typography Stack**: Integrated **Plus Jakarta Sans** for crisp header authority and **Inter** for clean readability.
+- **Curated Color Tokens**: Deep Slate backgrounds (`#0b1329`, `#111c38`), Royal Sapphire accents (`#0284c7`), Emerald success indicators (`#10b981`), and Amber pending warnings (`#f59e0b`).
+- **Micro-Interactions**: Hover elevation transforms (`translate-y-0.5`), subtle glow shadows (`shadow-card-glow`, `shadow-modal-glow`), and smooth modal backdrop blurs (`backdrop-blur-md`).
 
 ---
 
-## ⚡ Quick Start with Docker Compose
+## 🔌 API Specification
 
-Run the entire application (Frontend + Backend + PostgreSQL) with a single command:
+All protected endpoints require a valid JWT passed in the HTTP Authorization header: `Authorization: Bearer <TOKEN>`.
+
+### Authentication Routes (`/api/auth`)
+
+| Method | Endpoint | Access | Request Payload | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Public | `{ name, email, password, role }` | Register new student or professor account |
+| `POST` | `/api/auth/login` | Public | `{ email, password }` | Authenticate credentials & return JWT |
+
+### Group Management Routes (`/api/groups`)
+
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/groups/mine` | Student | Retrieve groups where authenticated student is enrolled |
+| `GET` | `/api/groups` | Public/Auth | Retrieve catalog of all course study groups |
+| `POST` | `/api/groups` | Student | Create new study group (creator designated as Leader) |
+| `GET` | `/api/groups/:id` | Auth | Retrieve detailed group roster and leader identity |
+| `POST` | `/api/groups/:id/members` | Student | Add classmate to study group via email address |
+| `DELETE` | `/api/groups/:id/members/:studentId` | Leader | Remove student member from group |
+
+### Assignment Routes (`/api/assignments`)
+
+| Method | Endpoint | Access | Request Payload | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `GET` | `/api/assignments` | Auth | — | List assignments (filtered by group scope for students) |
+| `POST` | `/api/assignments` | Admin | `{ title, description, due_date, onedrive_link, target_type, group_ids }` | Create new course assignment |
+| `PUT` | `/api/assignments/:id` | Admin | `{ title, description, due_date, onedrive_link, target_type, group_ids }` | Update assignment specification |
+| `DELETE` | `/api/assignments/:id` | Admin | — | Remove course assignment |
+
+### Submissions & Analytics Routes (`/api/submissions`, `/api/analytics`)
+
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/submissions/:assignmentId/confirm` | Leader | Trigger 2-Step confirmation (Enforces Leader Check) |
+| `GET` | `/api/analytics/overview` | Admin | Retrieve macro class metrics & recent assignment status |
+| `GET` | `/api/analytics/assignment/:id` | Admin | Retrieve drill-down confirmation rates per group |
+
+---
+
+## 💻 Getting Started & Orchestration
+
+### Prerequisites
+- [Docker & Docker Compose](https://www.docker.com/) (Recommended for containerized execution)
+- [Node.js (v20+)](https://nodejs.org/) & [PostgreSQL (v16+)](https://www.postgresql.org/) (For local manual execution)
+
+---
+
+### Option A: One-Command Docker Orchestration (Recommended)
+
+Run the complete multi-container stack (PostgreSQL + Express Backend + Vite React Frontend) with a single command:
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
-- **Frontend:** [http://localhost:3000](http://localhost:3000)
-- **Backend API:** [http://localhost:5000](http://localhost:5000)
-- **PostgreSQL:** `localhost:5432` (`joineasy_db`)
+- **Frontend Interface**: [http://localhost:3000](http://localhost:3000)
+- **Backend API Gateway**: [http://localhost:5000](http://localhost:5000)
+- **Database Engine**: `localhost:5432` (`joineasy_db`)
 
 ---
 
-## 🛠️ Local Development Setup (Without Docker)
+### Option B: Local Micro-Service Development
 
-### 1. PostgreSQL Database
-Ensure PostgreSQL is running locally and execute `backend/src/db/schema.sql`.
+#### 1. Database Initialization
+Create a local PostgreSQL database and load the schema:
+```bash
+psql -U postgres -d joineasy_db -f backend/src/db/schema.sql
+```
 
-### 2. Backend Setup
+#### 2. Backend API Setup
 ```bash
 cd backend
 npm install
-# Create a .env file with:
-# DATABASE_URL=postgresql://postgres:postgres@localhost:5432/joineasy_db
-# JWT_SECRET=your_jwt_secret_key
-# PORT=5000
+
+# Create environment configuration file (.env)
+cat <<EOT > .env
+PORT=5000
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/joineasy_db
+JWT_SECRET=super_secret_jwt_key_development
+CLIENT_ORIGIN=http://localhost:5173
+EOT
+
 npm run dev
 ```
 
-### 3. Frontend Setup
+#### 3. Frontend Web Application Setup
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-Access Vite dev server at [http://localhost:5173](http://localhost:5173).
+Access the Vite development server at [http://localhost:5173](http://localhost:5173).
 
 ---
 
-## 🔌 API Endpoints Summary
+## 📂 Project Directory Structure
 
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| POST | `/api/auth/register` | Public | Register new user with role (`student` / `admin`) |
-| POST | `/api/auth/login` | Public | Authenticate user & receive JWT |
-| GET | `/api/users/me` | Auth | Get current authenticated user profile |
-| GET | `/api/users/students` | Auth | List all registered students |
-| GET | `/api/groups/mine` | Student | List groups student belongs to |
-| GET | `/api/groups` | Auth | List all groups |
-| POST | `/api/groups` | Student | Create new group (creator automatically joins) |
-| GET | `/api/groups/:id` | Auth | Get group details & members |
-| POST | `/api/groups/:id/members` | Student | Add student to group by email |
-| DELETE | `/api/groups/:id/members/:studentId` | Student | Remove student from group (Creator only) |
-| GET | `/api/assignments` | Auth | List assignments (filtered by target for students) |
-| GET | `/api/assignments/:id` | Auth | Assignment details & targeted groups |
-| POST | `/api/assignments` | Admin | Create assignment (all / specific groups) |
-| PUT | `/api/assignments/:id` | Admin | Edit assignment |
-| DELETE | `/api/assignments/:id` | Admin | Delete assignment |
-| POST | `/api/submissions/:assignmentId/confirm` | Student | 2-step confirm assignment (Leader-only check) |
-| GET | `/api/submissions/group/:groupId` | Auth | Get submission status for a group |
-| GET | `/api/analytics/overview` | Admin | Overall admin metrics & recent assignments |
-| GET | `/api/analytics/assignment/:id` | Admin | Per-assignment group confirmation stats |
-
----
-
-## 🎨 Round 2 Enhancements & Architectural Rationale
-
-### 1. Leader-Only 2-Step Confirmation Safeguard (Section 5.1)
-- **Problem:** Previously, any group member could trigger confirmation for a group's assignment.
-- **Solution:** Enforced strict group leader authorization on backend `POST /api/submissions/:assignmentId/confirm` by checking `groups.created_by === req.user.userId`.
-- **UI UX:** Student assignment cards dynamically inspect leader status. Group leaders see the active **"✓ I have submitted"** button leading to the 2-step confirm modal sequence. Non-leader members see **"🔒 Waiting for group leader"** status pills. In the Group Members list, the leader is highlighted with a **"👑 Leader"** badge.
-
-#### Sequence Diagram: Group Leader Confirmation Safeguard
 ```
-Student (Leader)         Frontend App               Backend API              Database (PostgreSQL)
-      │                        │                         │                            │
-      │── Click "I've          │                         │                            │
-      │   submitted" ─────────>│                         │                            │
-      │                        │── Open Step 1 Modal ──>│                            │
-      │── Confirm Intent ─────>│                         │                            │
-      │                        │── Open Step 2 Modal ──>│                            │
-      │── Final Confirmation ─>│                         │                            │
-      │                        │── POST /confirm ───────>│                            │
-      │                        │                         │── Query group & creator ──>│
-      │                        │                         │<── Returns leaderId ───────│
-      │                        │                         │── If leaderId != user: 403 │
-      │                        │                         │── Else: UPSERT submission ─>│
-      │                        │<── 201 Created ─────────│                            │
-      │<── UI State Updates ───│                         │                            │
+ASSIGNMENT-JOINEASY/
+├── backend/                        # Node.js + Express REST API Application
+│   ├── src/
+│   │   ├── controllers/            # Request handlers & domain logic
+│   │   │   ├── analytics.js        # Admin analytical metrics controller
+│   │   │   ├── assignments.js      # Assignment CRUD & targeting controller
+│   │   │   ├── auth.js             # User registration & JWT authentication
+│   │   │   ├── groups.js           # Group creation & membership controller
+│   │   │   └── submissions.js      # Leader 2-step confirmation logic
+│   │   ├── db/                     # Database client, schema & seed scripts
+│   │   │   ├── index.js            # PostgreSQL connection pool configuration
+│   │   │   ├── schema.sql          # DDL tables, ENUM types & constraints
+│   │   │   └── seed.js            # Automated seed data generator
+│   │   ├── middleware/             # Security & RBAC authentication guards
+│   │   │   └── auth.js             # JWT verification middleware
+│   │   ├── routes/                 # Express API endpoint definitions
+│   │   └── index.js                # Server entrypoint & static frontend middleware
+│   ├── Dockerfile                  # Container definition for Node API server
+│   └── package.json
+│
+├── frontend/                       # React.js Single Page Application (SPA)
+│   ├── src/
+│   │   ├── components/             # Reusable UI component library
+│   │   │   ├── Layout.jsx          # Top bar, breadcrumbs & sidebar viewport
+│   │   │   ├── Modal.jsx           # Backdrop blur modal dialog container
+│   │   │   ├── Navbar.jsx          # Sidebar navigation with active pills
+│   │   │   ├── ProgressBar.jsx     # Gradient progress indicator with badges
+│   │   │   └── StatCard.jsx        # Metric summary cards with Lucide icons
+│   │   ├── context/                # Global state management
+│   │   │   └── AuthContext.jsx     # Auth state context & local token storage
+│   │   ├── pages/                  # Role-aware page views
+│   │   │   ├── admin/              # Professor management views
+│   │   │   │   ├── Analytics.jsx   # Visual completion chart & drilldown
+│   │   │   │   ├── Assignments.jsx # Assignment editor & scope selector
+│   │   │   │   ├── Dashboard.jsx   # System overview dashboard
+│   │   │   │   └── Groups.jsx      # Course groups roster table
+│   │   │   ├── student/            # Student portal views
+│   │   │   │   ├── Assignments.jsx # Coursework list & 2-step confirm modal
+│   │   │   │   ├── Dashboard.jsx   # Enrolled overview & deadline tracker
+│   │   │   │   └── Groups.jsx      # Study group creation & member list
+│   │   │   ├── Login.jsx           # Auth login portal view
+│   │   │   └── Register.jsx        # Account registration & role selector
+│   │   ├── services/               # Axios API HTTP client layer
+│   │   │   └── api.js              # Centralized API service methods
+│   │   ├── App.jsx                 # Client router & role protection guards
+│   │   ├── index.css               # Tailwind layer utilities & design tokens
+│   │   └── main.jsx
+│   ├── index.html                  # HTML head with Plus Jakarta Sans fonts
+│   ├── tailwind.config.js          # Color tokens, fonts, and animation utilities
+│   ├── Dockerfile                  # Multi-stage Nginx build definition
+│   └── package.json
+│
+├── docs/                           # Documentation media & architectural assets
+│   └── images/                     # System ER diagram & platform preview images
+├── docker-compose.yml              # Multi-container Docker orchestration manifest
+├── package.json                    # Workspace root orchestration script
+└── README.md                       # FAANG-Grade Technical Documentation
 ```
-
-### 2. Status Filtering on Admin Portals (Section 5.4)
-- Added live status filter pills on **Admin Assignments** and **Admin Analytics** pages.
-- Professors can filter assignments by:
-  - **All Assignments**
-  - **Fully Confirmed (100% submission rate)**
-  - **Pending Progress (Incomplete group submissions)**
-- Updates both list views and the custom analytics bar chart seamlessly.
-
-### 3. Domain Design Rationale (Section 5.2 & 5.3)
-
-#### A. Groups-Instead-of-Courses Rationale
-- **Design Decision:** The system adopts **Groups** as the primary organizing unit rather than introducing a separate `courses` catalog table.
-- **Rationale:** JoinEasy focuses on collaborative, team-based submission tracking for shared OneDrive folders. Using groups as the atomic entity minimizes schema complexity while providing targeted assignment distribution (`target_type: all | specific_groups`).
-
-#### B. Group-Level (Not Individual) Submissions Rationale
-- **Design Decision:** All assignments are strictly group-scoped.
-- **Rationale:** External submission happens on shared group OneDrive folders. Group-scoped assignment targeting aligns perfectly with team project deliverables.
-
-#### C. Group-Level (Not Per-Student) Confirmation Tracking Rationale
-- **Design Decision:** Confirmation status is stored as a single `submissions` row per `(assignment_id, group_id)`.
-- **Rationale:** Group submission is an atomic action on behalf of the whole team. By recording `confirmed_by -> users.id` (the group leader) on the submission record, the system avoids redundant individual student status checks while ensuring single-point leader accountability.
 
 ---
 
-## 🔒 Security & Design Considerations
+## 🔒 Security Compliance & Resilience
 
-1. **Stateless JWT Authentication & RBAC:** User claims (`userId`, `role`) are encoded in signed JWTs. Role guards enforce permissions on both frontend route transitions and backend API controllers.
-2. **Data Integrity Constraints:** Database-level unique constraints (`UNIQUE(assignment_id, group_id)`, `UNIQUE(group_id, student_id)`) ensure transactional consistency and eliminate race conditions.
-3. **UX Safeguard (2-Step Confirmation):** Prevents accidental marking of submissions by requiring initial intent check followed by explicit group-level confirmation by designated group leaders.
+1. **Stateless JWT Authorization**: Avoids server memory overhead while maintaining cryptographically signed user claims (`userId`, `role`).
+2. **CORS & Rate Limiting**: Implements `cors` whitelist policy and rate-limiting (`express-rate-limit`) on authentication endpoints to prevent brute-force attacks.
+3. **Database Race Condition Prevention**: Utilizes `pg` connection pool with SQL upsert logic and unique indices (`UNIQUE(assignment_id, group_id)`) to enforce atomic submission states.
 
+---
 
+<div align="center">
+
+**JoinEasy Academic Management System** • Built for Scale, Security, and Seamless User Experience.
+
+</div>
