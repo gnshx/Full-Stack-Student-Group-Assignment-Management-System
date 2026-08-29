@@ -11,7 +11,7 @@
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v3.x-06B6D4?style=for-the-badge&logo=tailwindcss)](https://tailwindcss.com/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker)](https://www.docker.com/)
 
-[Live Application Demo](https://full-stack-student-group-assignment.onrender.com/) • [System Architecture](#-system-architecture--topology) • [API Documentation](#-api-specification) • [Deployment Guide](#-getting-started--orchestration)
+[Live Application Demo](https://full-stack-student-group-assignment-82sy.onrender.com/) • [System Architecture](#-system-architecture--topology) • [API Documentation](#-api-specification) • [Deployment Guide](#-getting-started--orchestration)
 
 </div>
 
@@ -21,8 +21,8 @@
 
 | Access Role | Production Web App | Demo Email Credentials | Password |
 | :--- | :--- | :--- | :--- |
-| **Faculty / Admin** | [Live Platform Portal](https://full-stack-student-group-assignment.onrender.com/) | `turing@university.edu` | `password123` |
-| **Student** | [Live Platform Portal](https://full-stack-student-group-assignment.onrender.com/) | `alice@student.edu` | `password123` |
+| **Faculty / Admin** | [Live Platform Portal](https://full-stack-student-group-assignment-82sy.onrender.com/) | `turing@university.edu` | `password123` |
+| **Student** | [Live Platform Portal](https://full-stack-student-group-assignment-82sy.onrender.com/) | `alice@student.edu` | `password123` |
 
 ---
 
