@@ -30,4 +30,4 @@ databases:
   # Managed PostgreSQL Database
   - name: joineasy-db
     databaseName: joineasy_db
-    user: postgres
+    user: joineasy_user
